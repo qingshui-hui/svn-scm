@@ -951,8 +951,13 @@ export class Repository implements IRemoteRepository {
     );
   }
 
-  public async getChanges(): Promise<ISvnPathChange[]> {
-    return this.run(Operation.Changes, () => this.repository.getChanges());
+  public async getChanges(
+    fromRevision: string,
+    toRevision: string
+  ): Promise<ISvnPathChange[]> {
+    return this.run(Operation.Changes, () =>
+      this.repository.getChanges(fromRevision, toRevision)
+    );
   }
 
   public async finishCheckout() {
@@ -968,12 +973,6 @@ export class Repository implements IRemoteRepository {
   ) {
     return this.run(Operation.Ignore, () =>
       this.repository.addToIgnore(expressions, directory, recursive)
-    );
-  }
-
-  public async rename(oldFile: string, newFile: string) {
-    return this.run(Operation.Rename, () =>
-      this.repository.rename(oldFile, newFile)
     );
   }
 

@@ -63,7 +63,5 @@ suite("Svn Repository Tests", () => {
         `
       };
     };
-
-    await repository.rename("test.php", "tester.php");
   });
 });

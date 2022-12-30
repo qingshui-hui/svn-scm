@@ -191,68 +191,20 @@ export class Repository {
     return this._infoCache[file];
   }
 
-  public async getChanges(): Promise<ISvnPathChange[]> {
-    // First, check to see if this branch was copied from somewhere.
-    let args = [
-      "log",
-      "-r1:HEAD",
-      "--limit=1",
-      "--stop-on-copy",
-      "--xml",
-      "--with-all-revprops",
-      "--verbose"
-    ];
-    let result = await this.exec(args);
-    const entries = await parseSvnLog(result.stdout);
-
-    if (entries.length === 0 || entries[0].paths.length === 0) {
-      return [];
-    }
-
-    const copyCommitPath = entries[0].paths[0];
-
-    if (
-      typeof copyCommitPath.copyfromRev === "undefined" ||
-      typeof copyCommitPath.copyfromPath === "undefined" ||
-      typeof copyCommitPath._ === "undefined" ||
-      copyCommitPath.copyfromRev.trim().length === 0 ||
-      copyCommitPath.copyfromPath.trim().length === 0 ||
-      copyCommitPath._.trim().length === 0
-    ) {
-      return [];
-    }
-
-    const copyFromPath = copyCommitPath.copyfromPath;
-    const copyFromRev = copyCommitPath.copyfromRev;
-    const copyToPath = copyCommitPath._;
-    const copyFromUrl = this.info.repository.root + copyFromPath;
-    const copyToUrl = this.info.repository.root + copyToPath;
-
-    // Get last merge revision from path that this branch was copied from.
-    args = ["mergeinfo", "--show-revs=merged", copyFromUrl, copyToUrl];
-    result = await this.exec(args);
-    const revisions = result.stdout.trim().split("\n");
-    let latestMergedRevision: string = "";
-
-    if (revisions.length) {
-      latestMergedRevision = revisions[revisions.length - 1];
-    }
-
-    if (latestMergedRevision.trim().length === 0) {
-      latestMergedRevision = copyFromRev;
-    }
-
-    // Now, diff the source branch at the latest merged revision with the current branch's revision
-    const info = await this.getInfo(copyToUrl, undefined, true, true);
-    args = [
+  public async getChanges(
+    fromRevision: string,
+    toRevision: string
+  ): Promise<ISvnPathChange[]> {
+    const args = [
       "diff",
-      `${copyFromUrl}@${latestMergedRevision}`,
-      copyToUrl,
+      "-r",
+      `${fromRevision}:${toRevision}`,
       "--ignore-properties",
       "--xml",
       "--summarize"
     ];
-    result = await this.exec(args);
+
+    const result = await this.exec(args);
     let paths: ISvnPath[];
     try {
       paths = await parseDiffXml(result.stdout);
@@ -265,15 +217,15 @@ export class Repository {
     // Now, we have all the files that this branch changed.
     for (const path of paths) {
       changes.push({
-        oldPath: Uri.parse(path._),
-        newPath: Uri.parse(path._.replace(copyFromUrl, copyToUrl)),
-        oldRevision: latestMergedRevision.replace("r", ""),
-        newRevision: info.revision,
+        oldPath: Uri.parse(this.info.url + "/" + path._.replace("\\", "/")),
+        newPath: Uri.parse(this.info.url + "/" + path._.replace("\\", "/")),
+        oldRevision: fromRevision,
+        newRevision: toRevision,
         item: path.item,
         props: path.props,
         kind: path.kind,
         repo: Uri.parse(this.info.repository.root),
-        localPath: Uri.parse(path._.replace(copyFromUrl, ""))
+        localPath: Uri.parse(path._.replace(this.info.url, ""))
       });
     }
 
@@ -951,16 +903,6 @@ export class Repository {
     if (recursive) {
       args.push("--recursive");
     }
-
-    const result = await this.exec(args);
-
-    return result.stdout;
-  }
-
-  public async rename(oldName: string, newName: string): Promise<string> {
-    oldName = this.removeAbsolutePath(oldName);
-    newName = this.removeAbsolutePath(newName);
-    const args = ["rename", oldName, newName];
 
     const result = await this.exec(args);
 

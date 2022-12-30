@@ -194,7 +194,9 @@ export enum Status {
   NORMAL = "normal",
   OBSTRUCTED = "obstructed",
   REPLACED = "replaced",
-  UNVERSIONED = "unversioned"
+  UNVERSIONED = "unversioned",
+  FROMREVISION = "fromRevision",
+  TOREVISION = "toRevision",
 }
 
 export enum PropStatus {
