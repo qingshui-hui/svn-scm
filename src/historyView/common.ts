@@ -1,7 +1,5 @@
 import * as path from "path";
-import {
-  Uri
-} from "vscode";
+import { Uri } from "vscode";
 
 export function getIconObject(iconName: string): { light: Uri; dark: Uri } {
   // XXX Maybe use full path to extension?

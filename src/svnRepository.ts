@@ -12,7 +12,8 @@ import {
   SvnDepth,
   ISvnPathChange,
   ISvnPath,
-  ISvnListItem
+  ISvnListItem,
+  SvnKindType
 } from "./common/types";
 import { sequentialize } from "./decorators";
 import * as encodeUtil from "./encoding";
@@ -216,6 +217,9 @@ export class Repository {
 
     // Now, we have all the files that this branch changed.
     for (const path of paths) {
+      if (path.kind === SvnKindType.DIR) {
+        continue;
+      }
       changes.push({
         oldPath: Uri.parse(this.info.url + "/" + path._.replace("\\", "/")),
         newPath: Uri.parse(this.info.url + "/" + path._.replace("\\", "/")),

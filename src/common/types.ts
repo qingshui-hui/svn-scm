@@ -196,7 +196,7 @@ export enum Status {
   REPLACED = "replaced",
   UNVERSIONED = "unversioned",
   FROMREVISION = "fromRevision",
-  TOREVISION = "toRevision",
+  TOREVISION = "toRevision"
 }
 
 export enum PropStatus {

@@ -145,8 +145,7 @@
                     "when": "view == revisiondiffs && viewItem == changeRevision"
                 }
             ],
-            "editor/title": [
-            ]
+            "editor/title": []
         }
     }
 }

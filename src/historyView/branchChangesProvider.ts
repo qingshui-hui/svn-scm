@@ -4,10 +4,16 @@ import {
   TreeItem,
   commands,
   EventEmitter,
+  Uri,
   window
 } from "vscode";
 import { SourceControlManager } from "../source_control_manager";
-import { ISvnPathChange, Status } from "../common/types";
+import {
+  ISvnPathChange,
+  Status,
+  PropStatus,
+  SvnKindType
+} from "../common/types";
 import { getIconObject } from "./common";
 import { dispose } from "../util";
 
@@ -87,17 +93,36 @@ export class BranchChangesProvider
 
     const changes: Promise<ISvnPathChange[]>[] = [];
 
+    const promiseChanges = new Promise(resolve => {
+      resolve([
+        {
+          oldPath: Uri.parse("/"),
+          newPath: Uri.parse("/"),
+          oldRevision: this.fromRevision,
+          newRevision: "1",
+          item: Status.FROMREVISION,
+          props: PropStatus.NORMAL,
+          kind: SvnKindType.FILE,
+          repo: Uri.parse("/"),
+          localPath: Uri.parse("/")
+        },
+        {
+          oldPath: Uri.parse("/"),
+          newPath: Uri.parse("/"),
+          oldRevision: this.toRevision,
+          newRevision: "1",
+          item: Status.TOREVISION,
+          props: PropStatus.NORMAL,
+          kind: SvnKindType.FILE,
+          repo: Uri.parse("/"),
+          localPath: Uri.parse("/")
+        }
+      ]);
+    });
     // show revision
-    changes.push(
-      {
-        oldRevision: this.fromRevision,
-        item: "fromRevision"
-      },
-      {
-        oldRevision: this.toRevision,
-        item: "toRevision"
-      }
-    );
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    changes.push(promiseChanges);
 
     for (const repo of this.model.repositories) {
       changes.push(repo.getChanges(this.fromRevision, this.toRevision));
